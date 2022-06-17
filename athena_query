@@ -1,0 +1,57 @@
+SELECT DISTINCT STL.STLSLRCODE AS SELLER_CODE,
+         PST.TRANSACTIONID AS TRANSACTION_ID,
+         SLV.OCTSLVCODE AS SLAVE_CODE,
+         STL.CREATEDATE AS REJECTION_TIMESTAMP,
+         '' AS ALLOCATION_TIMESTAMP
+FROM "glue_db"."tb_ismstl_processed" STL
+INNER JOIN "glue_db"."tb_ismpst_processed" PST
+    ON STL.STLPSTRFNUM=PST.PSTRFNUM
+INNER JOIN "glue_db"."tb_oct_slv_processed" SLV
+    ON SLV.OCTSLVRFNUM=STL.STLSLVRFNUM
+WHERE STL.STLSLRCODE != '0'
+        AND SLV.OCTSLVCODE != '0'
+        AND STL.STLSMTTSTATE='2260'
+        AND PST.TRANSACTIONID IN 
+    (SELECT DISTINCT p_transactionid
+    FROM "glue_db"."tb_orders_processed" o
+    JOIN "glue_db"."tb_orderentries_processed" oe
+        ON o.pk = oe.P_ORDER
+    WHERE substring(o.createdts,1,10) NOT LIKE '%â%'
+            AND P_TRANSACTIONID != '0'
+            AND date(substring(o.createdts,1,10))
+        BETWEEN (current_date - INTERVAL '30' day)
+            AND (current_date - INTERVAL '1' day)
+            AND o.createdts != '0')
+UNION
+SELECT DISTINCT STL.STLSLRCODE AS SELLER_CODE,
+         PST.TRANSACTIONID AS TRANSACTION_ID,
+         SLV.OCTSLVCODE AS SLAVE_CODE,
+         '' AS REJECTION_TIMESTAMP, STL.CREATEDATE AS ALLOCATION_TIMESTAMP
+FROM "glue_db"."tb_ismstl_processed" STL
+INNER JOIN "glue_db"."tb_ismpst_processed" PST
+    ON STL.STLPSTRFNUM=PST.PSTRFNUM
+INNER JOIN "glue_db"."tb_oct_slv_processed" SLV
+    ON SLV.OCTSLVRFNUM=STL.STLSLVRFNUM
+INNER JOIN 
+    (SELECT MIN(STL.CREATEDATE) AS MIN_DATE,
+         PST.TRANSACTIONID AS TXNID
+    FROM "glue_db"."tb_ismstl_processed" STL
+    INNER JOIN "glue_db"."tb_ismpst_processed" PST
+        ON STL.STLPSTRFNUM=PST.PSTRFNUM
+    WHERE STL.STLSMTTSTATE='2262'
+    GROUP BY  PST.TRANSACTIONID) A
+    ON A.TXNID = PST.TRANSACTIONID
+WHERE STL.STLSMTTSTATE='2262'
+        AND TXNID != '0'
+        AND STL.STLSLRCODE != '0'
+        AND SLV.OCTSLVCODE != '0'
+        AND PST.TRANSACTIONID IN 
+    (SELECT DISTINCT p_transactionid
+    FROM "glue_db"."tb_orders_processed" o
+    JOIN "glue_db"."tb_orderentries_processed" oe
+        ON o.pk = oe.P_ORDER
+    WHERE substring(o.createdts,1,10) NOT LIKE '%â%'
+            AND date(substring(o.createdts,1,10))
+        BETWEEN (current_date - INTERVAL '30' day)
+            AND (current_date - INTERVAL '1' day)
+            AND o.createdts != '0') 

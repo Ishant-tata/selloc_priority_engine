@@ -1,0 +1,6 @@
+select transaction_id, handed_over_to_courier_date, OF.seller_id
+FROM tuldlmrt_mvp3.order_fact OF
+LEFT JOIN tuldlmrt.slave_dim sd ON sd.slv_key = of.slave_key
+WHERE DATE (order_date) BETWEEN dateadd(DAY,-30,CURRENT_DATE) AND dateadd(DAY,-1,CURRENT_DATE)
+      AND   cancel_date IS NULL
+      AND   order_allocated_date IS NOT NULL

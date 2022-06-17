@@ -1,0 +1,4 @@
+s3_staging_dir = "s3://aws-athena-query-results-424830402610-ap-south-1/"
+region = "ap-south-1"
+access_key ="AKIAWF2O5QAZAP7SIDDK"
+secret_key ="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"

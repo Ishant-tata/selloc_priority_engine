@@ -1,0 +1,6 @@
+select distinct seller_id,slave_id, pincode as pincode_dwh
+from unistoremart.slave_dim
+where pincode is not null
+--and is_listing =1
+and pincode != ''
+

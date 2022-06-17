@@ -1,0 +1,11 @@
+select distinct seller_id,slv_cd as slave_id, slv_rtrn_addrs_zip_cd as pincode_dldb
+from tuldlmrt.slv_cntct_dtl A
+inner join 
+tuldlmrt.slave_dim B
+on A.slv_cd = B.slave_id
+where slv_rtrn_addrs_zip_cd is not null
+and slv_rtrn_addrs_zip_cd != 0
+and slv_cd is not null
+--and slave_listing_status ='LISTED_ACTIVE'
+and current_date between date(effective_start_date) and date(effective_end_date)
+
